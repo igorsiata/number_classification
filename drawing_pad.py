@@ -2,7 +2,7 @@ import tkinter as tk
 import subprocess
 import os
 import io
-from PIL import Image
+from PIL import Image, ImageGrab
 import cv2
 import matplotlib.pyplot as plt
 import numpy as np
@@ -45,15 +45,22 @@ class App(tk.Tk):
         self.canvas.create_rectangle(x-16, y-16, x+16, y+16, fill='black')
 
     def predict(self):
-        self.canvas.postscript(file='temp.eps', colormode='color')
-        img = Image.open('temp.eps')
-        img.save('temp.png', 'png')
+        self.save_canvas_as_png()
         img_resizied = self.resize()
 
         number, probability = self.network.predict(img_resizied)
         self.prediction.config(
             text=f"number: {number}, certainity = {probability*100:.0f}%")
+        os.remove("temp.png")
         return number, probability
+
+    def save_canvas_as_png(self):
+        x = self.canvas.winfo_rootx()
+        y = self.canvas.winfo_rooty()
+        width = self.canvas.winfo_width()
+        height = self.canvas.winfo_height()
+        ImageGrab.grab(bbox=(x, y, x + width, y + height)
+                       ).save('temp.png', 'PNG')
 
     def resize(self):
         image = cv2.imread('temp.png', cv2.IMREAD_GRAYSCALE)
